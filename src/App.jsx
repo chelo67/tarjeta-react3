@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom"; // Hook de React Router v6
 import {
   Box,
   Button,
   Container,
   Avatar,
   Typography,
-  Grid2,
-  Chip,
   CircularProgress,
+  Grid,
+  Chip,
 } from "@mui/material";
 import LocalPhoneIcon from "@mui/icons-material/LocalPhone";
 import EmailIcon from "@mui/icons-material/Email";
@@ -16,40 +17,37 @@ import PlaceIcon from "@mui/icons-material/Place";
 import FacebookIcon from "@mui/icons-material/Facebook";
 import LinkedInIcon from "@mui/icons-material/LinkedIn";
 import InstagramIcon from "@mui/icons-material/Instagram";
-import XIcon from "@mui/icons-material/X";
-import PinterestIcon from "@mui/icons-material/Pinterest";
-import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import BasicSpeedDial from "./components/SpeedDial";
 import { fetchDataFromAPI } from "./api/api";
 import { PopupWidget } from "react-calendly";
-import { PopupButton } from "react-calendly";
 
 export default function App() {
-  const [data, setData] = useState(null); // Datos obtenidos de la API
-  const [loading, setLoading] = useState(true); // Estado para mostrar el CircularProgress
+  const { slug } = useParams(); // Extrae el slug dinámico de la URL
+  const [data, setData] = useState(null); // Datos de la tarjeta
+  const [loading, setLoading] = useState(true); // Estado de carga
 
+  console.log("Slug obtenido:", slug); // Agrega este log
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const result = await fetchDataFromAPI();
+        const result = await fetchDataFromAPI(slug); // Pasa el slug a la API
 
         if (result && result.tarjetas && result.tarjetas.length > 0) {
-          setData(result.tarjetas[0].acf); // Accede a los datos de la tarjeta
+          setData(result.tarjetas[0].acf); // Almacena los datos de la tarjeta
         } else {
           console.error("No se encontraron tarjetas en la respuesta.");
         }
 
-        setLoading(false); // Ocultar el CircularProgress después de obtener los datos
+        setLoading(false); // Deja de mostrar el indicador de carga
       } catch (error) {
         console.error("Error al obtener los datos:", error);
-        setLoading(false); // Ocultar el CircularProgress en caso de error
+        setLoading(false);
       }
     };
 
-    fetchData();
-  }, []);
+    fetchData(); // Llama a la API cuando cambie el slug
+  }, [slug]); // Se actualiza cuando cambie la URL
 
-  //Mostrar CircularProgress mientras se cargan los datos
   if (loading) {
     return (
       <div
@@ -65,7 +63,6 @@ export default function App() {
     );
   }
 
-  //Si no hay datos después de la carga, muestra un mensaje de error
   if (!data) {
     return <div>No hay datos disponibles.</div>;
   }
@@ -124,7 +121,7 @@ export default function App() {
 
           {data.puesto && (
             <Typography variant="subtitle1" sx={{ marginTop: "-8px" }}>
-              {data.puesto} puesto
+              {data.puesto}
             </Typography>
           )}
           {data.logo_empresa && (
@@ -136,7 +133,7 @@ export default function App() {
                 gap: "10px",
               }}
             >
-              <img src={data.logo_empresa} alt="" width="60px" />
+              <img src={data.logo_empresa} alt="Logo Empresa" width="60px" />
               {data.nombre_empresa && (
                 <Typography>{data.nombre_empresa}</Typography>
               )}
@@ -146,7 +143,7 @@ export default function App() {
       </Box>
 
       {/* Botones de contacto */}
-      <Grid2
+      <Grid
         container
         sx={{
           display: "flex",
@@ -156,216 +153,73 @@ export default function App() {
           gap: "20px",
         }}
       >
-        <>
-          {data.telefono && (
-            <a
-              href={`tel:${data.telefono}`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Grid2 item xs={3}>
-                <Button
-                  variant="contained"
-                  size="small"
-                  sx={{ bgcolor: data.color_boton_contacto }}
-                >
-                  <LocalPhoneIcon />
-                </Button>
-              </Grid2>
-            </a>
-          )}
-          {data.enlace_email && (
-            <a
-              href={`mailto:${data.enlace_email}`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Grid2 item xs={3}>
-                <Button
-                  variant="contained"
-                  size="small"
-                  sx={{ bgcolor: data.color_boton_contacto }}
-                >
-                  <EmailIcon />
-                </Button>
-              </Grid2>
-            </a>
-          )}
-          {data.enlace_web && (
-            <a href={data.enlace_web} target="_blank" rel="noopener noreferrer">
-              <Grid2 item xs={3}>
-                <Button
-                  variant="contained"
-                  size="small"
-                  sx={{ bgcolor: data.color_boton_contacto }}
-                >
-                  <LanguageIcon />
-                </Button>
-              </Grid2>
-            </a>
-          )}
-          {data.direccion && (
-            <a
-              href={`https://maps.google.com/?q=${data.direccion}`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Grid2 item xs={3}>
-                <Button
-                  variant="contained"
-                  size="small"
-                  sx={{ bgcolor: data.color_boton_contacto }}
-                >
-                  <PlaceIcon />
-                </Button>
-              </Grid2>
-            </a>
-          )}
-        </>
-      </Grid2>
-
-      {/* Información de contacto */}
-      <Box
-        sx={{
-          marginTop: "5px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: "10px",
-          flexDirection: "column",
-        }}
-      >
         {data.telefono && (
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <LocalPhoneIcon color="primary" fontSize="small" />
-            <Typography variant="body2" padding={1}>
-              {data.telefono}
-            </Typography>
-          </Box>
+          <a href={`tel:${data.telefono}`} target="_blank" rel="noopener noreferrer">
+            <Button variant="contained" size="small" sx={{ bgcolor: data.color_boton_contacto }}>
+              <LocalPhoneIcon />
+            </Button>
+          </a>
         )}
-
         {data.enlace_email && (
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <EmailIcon color="primary" fontSize="small" />
-            <Typography variant="body2" padding={1}>
-              {data.enlace_email}
-            </Typography>
-          </Box>
+          <a href={`mailto:${data.enlace_email}`} target="_blank" rel="noopener noreferrer">
+            <Button variant="contained" size="small" sx={{ bgcolor: data.color_boton_contacto }}>
+              <EmailIcon />
+            </Button>
+          </a>
         )}
-
         {data.enlace_web && (
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <LanguageIcon color="primary" fontSize="small" />
-            <Typography variant="body2" padding={1}>
-              {data.enlace_web}
-            </Typography>
-          </Box>
+          <a href={data.enlace_web} target="_blank" rel="noopener noreferrer">
+            <Button variant="contained" size="small" sx={{ bgcolor: data.color_boton_contacto }}>
+              <LanguageIcon />
+            </Button>
+          </a>
         )}
-
         {data.direccion && (
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
+          <a
+            href={`https://maps.google.com/?q=${data.direccion}`}
+            target="_blank"
+            rel="noopener noreferrer"
           >
-            <PlaceIcon color="primary" fontSize="small" />
-            <Typography variant="body2" padding={1}>
-              {data.direccion}
-            </Typography>
-          </Box>
+            <Button variant="contained" size="small" sx={{ bgcolor: data.color_boton_contacto }}>
+              <PlaceIcon />
+            </Button>
+          </a>
         )}
-      </Box>
+      </Grid>
 
       {/* Redes sociales */}
-      <Typography variant="h6" sx={{ textAlign: "center", marginTop: "10px" }}>
-        Redes Sociales
-      </Typography>
-      <Box
-        sx={{
-          marginTop: "5px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: "10px",
-        }}
-      >
+      <Box sx={{ marginTop: "10px", textAlign: "center" }}>
+        <Typography variant="h6">Redes Sociales</Typography>
         {data.facebook && (
-          <a
-            href={data.facebook}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ textDecoration: "none" }}
-          >
-            <Chip icon={<FacebookIcon />} label="Facebook" clickable />
-          </a>
+          <Chip icon={<FacebookIcon />} label="Facebook" clickable component="a" href={data.facebook} target="_blank" />
         )}
         {data.linkedin && (
-          <a
-            href={data.linkedin}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ textDecoration: "none" }}
-          >
-            <Chip icon={<LinkedInIcon />} label="LinkedIn" clickable />
-          </a>
+          <Chip icon={<LinkedInIcon />} label="LinkedIn" clickable component="a" href={data.linkedin} target="_blank" />
         )}
         {data.instagram && (
-          <a
-            href={data.instagram}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ textDecoration: "none" }}
-          >
-            <Chip icon={<InstagramIcon />} label="Instagram" clickable />
-          </a>
+          <Chip icon={<InstagramIcon />} label="Instagram" clickable component="a" href={data.instagram} target="_blank" />
         )}
-       
       </Box>
-      {/* CALENDLY  */}
+
+      {/* Calendly Widget */}
       <Box
         sx={{
-          marginTop: "5px",
+          marginTop: "10px",
           display: "flex",
-          alignItems: "center",
           justifyContent: "center",
-          padding: "10px",
           position: "relative",
         }}
       >
-          < PopupWidget 
-          url = "https://calendly.com/marceloacampora/consultas" 
-          /* 
-          * react-calendly usa la función Portal de React (https://reactjs.org/docs/portals.html) para renderizar el modal emergente. Como resultado, necesitarás 
-          * especificar la propiedad rootElement para asegurar que el modal se inserte en el domNode correcto. 
-          */ 
-          rootElement = { document . getElementById ( "root" ) } 
-          text = "Agenda una cita" 
-          textColor = "#ffffff" 
-          color = {data.color_boton_contacto}
-        /> 
-      
-        <BasicSpeedDial />
+        <PopupWidget
+          url="https://calendly.com/marceloacampora/consultas"
+          rootElement={document.getElementById("root")}
+          text="Agenda una cita"
+          textColor="#ffffff"
+          color={data.color_boton_contacto}
+        />
       </Box>
+
+      <BasicSpeedDial />
     </Container>
   );
 }
